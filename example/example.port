@@ -1,5 +1,9 @@
 % Website Title | Ishaan Mehta | TODO! Description
 
+home > (index)
+github > {https://github.com/MeanBeanie}
+TODO! add more links > (index)
+
 [index]
 # Header
 this is the main page, it needs to exist
@@ -8,11 +12,13 @@ go to page 1 > (page1)
 go to page 2 > (page2)
 
 [page1]
+% Project 1: Doing this with that and this
 # Header
 hello world, how are you!
 This is page one, split up across multiple p elements
 
 [page2]
+% Project 2: Doing that with this and that
 # Header
 Neato this is page 2
 ## Subheader

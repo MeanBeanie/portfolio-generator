@@ -5,6 +5,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ADD_A(element_refferal,prefix,suffix) \
+	if(element_refferal target_type == 0){\
+		fprintf(\
+			file,\
+			"\t\t<a class=\"text_element_p\" href=\""STRING_FMT".html\">"prefix STRING_FMT suffix"</a>\n",\
+			STRING_ARGS(element_refferal target), STRING_ARGS(element_refferal text)\
+		);\
+	}\
+	else{\
+		fprintf(\
+			file,\
+			"\t\t<a class=\"text_element_p\" href=\""STRING_FMT"\">"prefix STRING_FMT suffix"</a>\n",\
+			STRING_ARGS(element_refferal target), STRING_ARGS(element_refferal text)\
+		);\
+	}
+
 const char* css_file;
 
 int main(int argc, char* argv[]){
@@ -47,20 +63,20 @@ int main(int argc, char* argv[]){
 	struct website site = parse(tokens, token_count, page_count);
 	printf("--- Parsing ---\nCreated site %.*s, with %d pages\n", site.metadata.title.len, site.metadata.title.start, site.page_c);
 	printf(
-		"--- Metadata ---\n> Title: "STRING_FMT"\n> Author: "STRING_FMT"\n> Desc: "STRING_FMT"\n--- END Metadata ---\n",
+		"  --- Metadata ---\n  > Title: "STRING_FMT"\n  > Author: "STRING_FMT"\n  > Desc: "STRING_FMT"\n  --- END Metadata ---\n",
 		STRING_ARGS(site.metadata.title),
 		STRING_ARGS(site.metadata.author),
 		STRING_ARGS(site.metadata.description)
 	);
 	for(int i = 0; i < site.page_c; i++){
-		printf("- Page %d: \"%.*s\": %d text elements\n", i, site.pages[i].title.len, site.pages[i].title.start, site.pages[i].text_el_c);
+		printf("- Page %d: \"%.*s\" (%.*s): %d text elements\n", i, STRING_ARGS(site.pages[i].section_name), STRING_ARGS(site.pages[i].title), site.pages[i].text_el_c);
 	}
 	printf("--- END Parsing ---\n");
 
 	char filepath[128];
 	for(int i = 0; i < site.page_c; i++){
 		memset(filepath, 0, 128);
-		strncpy(filepath, site.pages[i].title.start, site.pages[i].title.len);
+		strncpy(filepath, site.pages[i].section_name.start, site.pages[i].section_name.len);
 		strcat(filepath, ".html");
 		filepath[127] = '\0';
 		FILE* file = fopen(filepath, "w");
@@ -85,9 +101,24 @@ int main(int argc, char* argv[]){
 			file,
 			"\t<body>\n"
 			"\t<div class=\"text_element_box\">\n"
-			"\t\t<h1 class=\"page_title\">"STRING_FMT"</h1>\n\t\t<hr>\n",
-			STRING_ARGS(site.pages[i].title)
+			"\t\t<h1 style=\"text-align: center;\">Some sort of title text or something idk</h1>\n"
+			"\t\t<nav style=\"text-align: center;\">\n"
 		);
+		for(int j = 0; j < site.navbar.text_el_c; j++){
+			ADD_A(site.navbar.text_elements[j]., "[", "]")
+		}
+		fprintf(
+			file,
+			"\t\t</nav>\n"
+			"\t\t<hr>\n"
+		);
+		if(site.pages[i].title.len != 0){
+			fprintf(
+				file,
+				"\t\t<h2 class=\"page_title\">"STRING_FMT"</h1>\n\t\t<hr>\n",
+				STRING_ARGS(site.pages[i].title)
+			);
+		}
 
 		for(int j = 0; j < site.pages[i].text_el_c; j++){
 			struct text_element* el = &site.pages[i].text_elements[j];
@@ -103,17 +134,13 @@ int main(int argc, char* argv[]){
 					fprintf(
 						file,
 						"\t\t<h%d class=\"text_element_h\">"STRING_FMT"</h%d>\n",
-						el->level, STRING_ARGS(el->text), el->level
+						el->level+1, STRING_ARGS(el->text), el->level+1
 					);
 				}
 			}
 			else{
-				fprintf(
-					file,
-					"\t\t<a class=\"text_element_p\" href=\""STRING_FMT".html\">"STRING_FMT"</a>\n"
-					"\t\t<p></p>\n",
-					STRING_ARGS(el->target), STRING_ARGS(el->text)
-				);
+				ADD_A(el->, "", "");
+				fprintf(file, "\t\t<p></p>\n");
 			}
 		}
 
@@ -127,6 +154,13 @@ int main(int argc, char* argv[]){
 
 end:
 	free(tokens);
+
+	free(site.navbar.text_elements);
+	for(int i = 0; i < page_count; i++){
+		free(site.pages[i].text_elements);
+	}
+	free(site.pages);
+
 	return 0;
 }
 
@@ -134,23 +168,37 @@ const char* css_file =
 "body {\n"
 "\tbackground-color: #202020;\n"
 "\tcolor: #ddd;\n"
+"\toverflow: hidden;\n"
+"}\n"
+"a {\n"
+"\tcolor: #6767bb;\n"
+"}\n"
+"a:hover {\n"
+"\tbackground-color: #505050;\n"
 "}\n"
 ".page_title {\n"
 "\ttext-align: center;\n"
 "}\n"
 ".text_element_p {\n"
-"\tmargin-left: 1%;\n"
-"\twidth: 98%;\n"
+"\tmargin-left: 4%;\n"
+"\twidth: 92%;\n"
 "\toverflow-wrap: break-word;\n"
 "}\n"
 ".text_element_h {\n"
 "\ttext-align: center;\n"
 "}\n"
 ".text_element_box {\n"
-"\tmargin-left: 24%;\n"
-"\twidth: 52%;\n"
+"\tmargin-left: 9%;\n"
+"\twidth: 82%;\n"
 "\theight: 100%;\n"
-"\tborder-right: 1px solid red;\n"
-"\tborder-left: 1px solid red;\n"
 "}\n"
+"hr {\n"
+"\tcolor: rgba(0, 0, 0, 0);\n"
+"\tborder: 2px solid #800000;\n"
+"\tborder-radius: 50px;\n"
+"\twidth: 92%;\n"
+"}\n"
+".nav_elem {\n"
+"\tcolor: #808000;\n"
+"}"
 "\0";

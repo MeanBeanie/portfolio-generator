@@ -11,12 +11,14 @@ typedef struct {
 
 struct text_element {
 	int level; // uses 0 for <p>
+	int target_type; // 0 for page ref, 1 for web ref
 	string text;
 	string target; // used for links, len == 0 when unsed
 };
 
 struct page {
 	string title;
+	string section_name;
 	struct text_element* text_elements;
 	int text_el_c;
 };
@@ -27,6 +29,7 @@ struct website {
 		string author;
 		string description;
 	} metadata;
+	struct page navbar;
 	struct page* pages;
 	int page_c;
 };

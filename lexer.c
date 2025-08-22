@@ -40,6 +40,7 @@ int find_next(char* buf, int buflen, int start, char target){
 }
 
 struct token* lex(char* buffer, int buflen, int* t_size, int* page_count){
+	(*page_count) = 0;
 	int t_cap = 8;
 	struct token* tokens = malloc(sizeof(struct token)*t_cap);
 
@@ -66,6 +67,16 @@ struct token* lex(char* buffer, int buflen, int* t_size, int* page_count){
 			new_token(TT_SECTION_REF, buffer+i, len);
 			i += len;
 		}
+		else if(buffer[i] == '{'){
+			ensure_size;
+			int len = find_next(buffer, buflen, i, '}');
+			if(len < 0){
+				fprintf(stderr, "Unclosed '{' found\n");
+				goto lexing_failed;
+			}
+			new_token(TT_WEBSITE_REF, buffer+i, len);
+			i += len;
+		}
 		else if(buffer[i] == '>'){
 			ensure_size;
 			new_token(TT_LINK, buffer+i, 1);
@@ -87,7 +98,12 @@ struct token* lex(char* buffer, int buflen, int* t_size, int* page_count){
 				fprintf(stderr, "Expected newline after metadata\n");
 				goto lexing_failed;
 			}
-			new_token(TT_METADATA, buffer+i, len+1);
+			if((*page_count) == 0){
+				new_token(TT_METADATA, buffer+i, len+1);
+			}
+			else{
+				new_token(TT_PAGE_TITLE, buffer+i, len+1);
+			}
 			i += len;
 		}
 		else if(last_char(' ') || last_char('\n') || last_char('\t') || last_char('\r')){
