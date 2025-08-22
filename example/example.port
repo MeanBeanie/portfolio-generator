@@ -1,0 +1,19 @@
+% Website Title | Ishaan Mehta | TODO! Description
+
+[index]
+# Header
+this is the main page, it needs to exist
+it has links to other pages too
+go to page 1 > (page1)
+go to page 2 > (page2)
+
+[page1]
+# Header
+hello world, how are you!
+This is page one, split up across multiple p elements
+
+[page2]
+# Header
+Neato this is page 2
+## Subheader
+this one even has a subheader
