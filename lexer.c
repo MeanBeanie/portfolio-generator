@@ -81,6 +81,16 @@ struct token* lex(char* buffer, int buflen, int* t_size, int* page_count){
 			ensure_size;
 			new_token(TT_LINK, buffer+i, 1);
 		}
+		else if(last_char('\n') && buffer[i] == '~'){
+			ensure_size;
+			int len = find_next(buffer, buflen, i, '\n');
+			if(len < 0){
+				fprintf(stderr, "Expected newline after site title\n");
+				goto lexing_failed;
+			}
+			new_token(TT_SITE_TITLE, buffer+i, len);
+			i += len;
+		}
 		else if(last_char('\n') && buffer[i] == '#'){
 			ensure_size;
 			int len = find_next(buffer, buflen, i, '\n');

@@ -31,6 +31,7 @@ struct website {
 	} metadata;
 	struct page navbar;
 	struct page* pages;
+	string title;
 	int page_c;
 };
 

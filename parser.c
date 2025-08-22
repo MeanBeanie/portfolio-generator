@@ -37,6 +37,14 @@ struct website parse(struct token* tokens, int token_count, int page_count){
 				res.metadata.description = (string){ .start = tokens[i].start+6+title_len+author_len, .len = desc_len };
 				break;
 			}
+			case TT_SITE_TITLE:
+			{
+				res.title = (string){
+					.start = tokens[i].start+2,
+					.len = tokens[i].len-2
+				};
+				break;
+			}
 			case TT_PAGE_TITLE:
 			{
 				int len = find_next(tokens[i].start, tokens[i].len, 2, '\n');

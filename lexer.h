@@ -5,6 +5,7 @@ int find_next(char* buf, int buflen, int start, char target);
 
 enum TokenType {
 	TT_METADATA,
+	TT_SITE_TITLE,
 	TT_PAGE_TITLE,
 	TT_SECTION,
 	TT_SECTION_REF,

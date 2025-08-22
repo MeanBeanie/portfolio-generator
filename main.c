@@ -101,8 +101,9 @@ int main(int argc, char* argv[]){
 			file,
 			"\t<body>\n"
 			"\t<div class=\"text_element_box\">\n"
-			"\t\t<h1 style=\"text-align: center;\">Some sort of title text or something idk</h1>\n"
-			"\t\t<nav style=\"text-align: center;\">\n"
+			"\t\t<h1 style=\"text-align: center;\">"STRING_FMT"</h1>\n"
+			"\t\t<nav style=\"text-align: center;\">\n",
+			STRING_ARGS(site.title)
 		);
 		for(int j = 0; j < site.navbar.text_el_c; j++){
 			ADD_A(site.navbar.text_elements[j]., "[", "]")
