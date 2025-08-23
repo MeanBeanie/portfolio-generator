@@ -17,6 +17,23 @@ go to page 2 > (page2)
 # Header
 hello world, how are you!
 This is page one, split up across multiple p elements
+- this has a list
+- it is unordered
+- but it is still good
+## Then code stuff
+`
+// i'm a code block :3
+// no syntax highlight though
+#include <stdio.h>
+
+int main(int argc, char* argv[]){
+	for(int i = 0; i < argc; i++){
+		printf("%s ", argv[i]);
+	}
+	
+	return 0;
+}
+`
 
 [page2]
 % Project 2: Doing that with this and that

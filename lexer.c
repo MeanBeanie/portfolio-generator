@@ -81,6 +81,16 @@ struct token* lex(char* buffer, int buflen, int* t_size, int* page_count){
 			ensure_size;
 			new_token(TT_LINK, buffer+i, 1);
 		}
+		else if(last_char('\n') && buffer[i] == '`'){
+			ensure_size;
+			int len = find_next(buffer, buflen, i, '`');
+			if(len < 0){
+				fprintf(stderr, "Unclosed '`' found\n");
+				goto lexing_failed;
+			}
+			new_token(TT_CODE_BLOCK, buffer+i+1, len-1);
+			i += len;
+		}
 		else if(last_char('\n') && buffer[i] == '~'){
 			ensure_size;
 			int len = find_next(buffer, buflen, i, '\n');

@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
 	int page_count = 0;
 	int token_count = 0;
 	struct token* tokens = lex(buffer, in_size, &token_count, &page_count);
-	if(tokens == NULL || page_count == 0 || token_count == 0){ goto end; }
+	if(tokens == NULL || page_count == 0 || token_count == 0){ goto end_lexing; }
 	printf("--- Lexing ---\nFinished tokenizing the input file with %d tokens (%d pages)\n", token_count, page_count);
 	int text_lit_count = 0;
 	for(int i = 0; i < token_count; i++){
@@ -131,6 +131,13 @@ int main(int argc, char* argv[]){
 						STRING_ARGS(el->text)
 					);
 				}
+				else if(el->level == -1){
+					fprintf(
+						file,
+						"\t\t<xmp class=\"code\">"STRING_FMT"</xmp>\n",
+						STRING_ARGS(el->text)
+					);
+				}
 				else{
 					fprintf(
 						file,
@@ -153,29 +160,30 @@ int main(int argc, char* argv[]){
 	fwrite(css_file, sizeof(char), strlen(css_file), file);
 	fclose(file);
 
-end:
-	free(tokens);
-
 	free(site.navbar.text_elements);
 	for(int i = 0; i < page_count; i++){
 		free(site.pages[i].text_elements);
 	}
 	free(site.pages);
 
+end_lexing:
+	free(tokens);
+
 	return 0;
 }
 
 const char* css_file = 
 "body {\n"
-"\tbackground-color: #202020;\n"
-"\tcolor: #ddd;\n"
-"\toverflow: hidden;\n"
+"\tfont-size: 14px;\n"
+"\tbackground-color: #3b4252;\n"
+"\tcolor: #eceff4;\n"
+"\toverflow: scroll;\n"
 "}\n"
 "a {\n"
-"\tcolor: #6767bb;\n"
+"\tcolor: #81a1c1;\n"
 "}\n"
 "a:hover {\n"
-"\tbackground-color: #505050;\n"
+"\tcolor: #434c5e;\n"
 "}\n"
 ".page_title {\n"
 "\ttext-align: center;\n"
@@ -195,11 +203,17 @@ const char* css_file =
 "}\n"
 "hr {\n"
 "\tcolor: rgba(0, 0, 0, 0);\n"
-"\tborder: 2px solid #800000;\n"
+"\tborder: 2px solid #8fbcbb;\n"
 "\tborder-radius: 50px;\n"
 "\twidth: 92%;\n"
 "}\n"
 ".nav_elem {\n"
-"\tcolor: #808000;\n"
-"}"
+"\tcolor: #a3be8c;\n"
+"}\n"
+".code {\n"
+"\tmargin-left: 4%;\n"
+"\twidth: 92%;\n"
+"\tfont-family: monospace;\n"
+"\tcolor: #a3be8c;\n"
+"}\n"
 "\0";

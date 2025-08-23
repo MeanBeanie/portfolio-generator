@@ -54,6 +54,19 @@ struct website parse(struct token* tokens, int token_count, int page_count){
 				};
 				break;
 			}
+			case TT_CODE_BLOCK:
+			{
+				ensure_size(cur_count, cur_elements);
+				cur_elements[cur_count++] = (struct text_element){
+					.level = -1,
+					.target = {0},
+					.text = (string){
+						.start = tokens[i].start,
+						.len = tokens[i].len
+					}
+				};
+				break;
+			}
 			case TT_SECTION:
 			{
 				pagenr++;
