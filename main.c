@@ -1,154 +1,155 @@
-#include "lexer.h"
-#include "parser.h"
+#include "tokenizer.h"
+#include "website.h"
 #include <stdio.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define ADD_A(element_refferal,prefix,suffix) \
-	if(element_refferal target_type == 0){\
-		fprintf(\
-			file,\
-			"\t\t<a class=\"text_element_p\" href=\""STRING_FMT".html\">"prefix STRING_FMT suffix"</a>\n",\
-			STRING_ARGS(element_refferal target), STRING_ARGS(element_refferal text)\
+#define new_p(el_ref,prefix,suffix)\
+	if(el_ref as.text.is_page_ref < 0){\
+		fprintf(file, "\t\t<p class=\"text_element_p\">"STR_PRINT"</p>\n",\
+		STR_FMT(el_ref as.text.str));\
+	}\
+	else if(el_ref as.text.is_page_ref == 0){\
+		fprintf(file, "\t\t<a class=\"text_element_p\" href=\""STR_PRINT"\">"prefix STR_PRINT suffix"</a>\n",\
+		STR_FMT(el_ref as.text.target), STR_FMT(el_ref as.text.str));\
+	}\
+	else{\
+		fprintf(file, "\t\t<a class=\"text_element_p\" href=\""STR_PRINT".html\">"prefix STR_PRINT suffix"</a>\n",\
+		STR_FMT(el_ref as.text.target), STR_FMT(el_ref as.text.str));\
+	}
+
+#define new_h(el_ref,prefix,suffix)\
+	if(el_ref as.text.is_page_ref < 0){\
+		fprintf(file, "\t\t<h%d class=\"text_element_h\">"STR_PRINT"</h%d>\n",\
+		el_ref as.text.level + HEADER_SIZE_OFFSET, STR_FMT(el_ref as.text.str), el_ref as.text.level + HEADER_SIZE_OFFSET);\
+	}\
+	else if(el_ref as.text.is_page_ref == 0){\
+		fprintf(file, "\t\t<a class=\"text_element_h\" href=\""STR_PRINT"\"><h%d>"prefix STR_PRINT suffix"</h%d></a>\n",\
+			STR_FMT(el_ref as.text.target),\
+			el_ref as.text.level + HEADER_SIZE_OFFSET,\
+			STR_FMT(el_ref as.text.str),\
+			el_ref as.text.level + HEADER_SIZE_OFFSET\
 		);\
 	}\
 	else{\
-		fprintf(\
-			file,\
-			"\t\t<a class=\"text_element_p\" href=\""STRING_FMT"\">"prefix STRING_FMT suffix"</a>\n",\
-			STRING_ARGS(element_refferal target), STRING_ARGS(element_refferal text)\
+		fprintf(file, "\t\t<a class=\"text_element_h\" href=\""STR_PRINT".html\"><h%d>"prefix STR_PRINT suffix"</h%d></a>\n",\
+			STR_FMT(el_ref as.text.target),\
+			el_ref as.text.level + HEADER_SIZE_OFFSET,\
+			STR_FMT(el_ref as.text.str),\
+			el_ref as.text.level + HEADER_SIZE_OFFSET\
 		);\
 	}
 
-const char* css_file;
-
 int main(int argc, char* argv[]){
-	if(argc < 2){ fprintf(stderr, "Usage: text2web <infile>\n"); return 1; }
-
-	FILE* infile = fopen(argv[1], "r");
-	if(infile == NULL){
-		fprintf(stderr, "Failed to open file at '%s': %s\n", argv[1], strerror(errno));
+	if(argc < 2){
+		fprintf(stderr, "Usage: portgen <infile>\n");
 		return 1;
 	}
 
-	fseek(infile, 0, SEEK_END);
-	size_t in_size = ftell(infile);
-	char buffer[in_size];
-	fseek(infile, 0, SEEK_SET);
-	if(fread(buffer, sizeof(char), in_size, infile) != in_size){
-		fprintf(stderr, "Failed to read all data from file\n");
-		fclose(infile);
+	FILE* file = fopen(argv[1], "r");
+	if(file == NULL){
+		perror("Failed to open infile");
 		return 1;
 	}
-	fclose(infile);
+	fseek(file, 0, SEEK_END);
+	int buflen = ftell(file);
+	char* buffer = malloc(sizeof(char)*(buflen+1));
+	fseek(file, 0, SEEK_SET);
+	fread(buffer, sizeof(char), buflen, file);
+	buffer[buflen] = '\0';
+	fclose(file);
 
-	int page_count = 0;
-	int token_count = 0;
-	struct token* tokens = lex(buffer, in_size, &token_count, &page_count);
-	if(tokens == NULL || page_count == 0 || token_count == 0){ goto end_lexing; }
-	printf("--- Lexing ---\nFinished tokenizing the input file with %d tokens (%d pages)\n", token_count, page_count);
-	int text_lit_count = 0;
-	for(int i = 0; i < token_count; i++){
-		if(tokens[i].type == TT_TEXT_LITERAL){ text_lit_count++; }
+	struct token_list tokens = tokenize(buffer, buflen);
+	if(tokens.arr == NULL){
+		fprintf(stderr, "\nFailed to tokenize data\n");
+		goto failed_tokenize;
 	}
-	printf("Merged text literals, went from %d to ", text_lit_count);
-	post_lex(tokens, token_count);
-	text_lit_count = 0;
-	for(int i = 0; i < token_count; i++){
-		if(tokens[i].type == TT_TEXT_LITERAL){ text_lit_count++; }
-	}
-	printf("%d\n--- END Lexing ---\n", text_lit_count);
 
-	struct website site = parse(tokens, token_count, page_count);
-	printf("--- Parsing ---\nCreated site %.*s, with %d pages\n", site.metadata.title.len, site.metadata.title.start, site.page_c);
-	printf(
-		"  --- Metadata ---\n  > Title: "STRING_FMT"\n  > Author: "STRING_FMT"\n  > Desc: "STRING_FMT"\n  --- END Metadata ---\n",
-		STRING_ARGS(site.metadata.title),
-		STRING_ARGS(site.metadata.author),
-		STRING_ARGS(site.metadata.description)
-	);
-	for(int i = 0; i < site.page_c; i++){
-		printf("- Page %d: \"%.*s\" (%.*s): %d text elements\n", i, STRING_ARGS(site.pages[i].section_name), STRING_ARGS(site.pages[i].title), site.pages[i].text_el_c);
+	struct website site = process_tokens(&tokens, tokens.page_count);
+	if(site.failed == 1){
+		fprintf(stderr, "\nFailed to create website from tokens\n");
+		goto failed_processing;
 	}
-	printf("--- END Parsing ---\n");
 
-	char filepath[128];
-	for(int i = 0; i < site.page_c; i++){
-		memset(filepath, 0, 128);
-		strncpy(filepath, site.pages[i].section_name.start, site.pages[i].section_name.len);
+	for(int i = 1; i < site.pa_len; i++){
+		char filepath[128] = {0};
+		strncpy(filepath, site.pages[i].metadata.section.str, site.pages[i].metadata.section.len);
 		strcat(filepath, ".html");
 		filepath[127] = '\0';
+
 		FILE* file = fopen(filepath, "w");
-		if(file == NULL){ fprintf(stderr, "Failed to open file '%s': %s\n", filepath, strerror(errno)); continue; }
-		fprintf(file, "<!DOCTYPE html>\n<html>\n");
-
-		fprintf(
-			file,
-			"\t<head>\n"
-			"\t\t<meta charset=\"UTF-8\">\n"
-			"\t\t<title>"STRING_FMT"</title>\n"
-			"\t\t<meta name=\"author\" content=\""STRING_FMT"\">\n"
-			"\t\t<meta name=\"description\" content=\""STRING_FMT"\">\n"
-			"\t\t<link rel=\"stylesheet\" href=\"style.css\">\n"
-			"\t</head>\n",
-			STRING_ARGS(site.metadata.title),
-			STRING_ARGS(site.metadata.author),
-			STRING_ARGS(site.metadata.description)
-		);
-
-		fprintf(
-			file,
-			"\t<body>\n"
-			"\t<div class=\"text_element_box\">\n"
-			"\t\t<h1 style=\"text-align: center;\">"STRING_FMT"</h1>\n"
-			"\t\t<nav style=\"text-align: center;\">\n",
-			STRING_ARGS(site.title)
-		);
-		for(int j = 0; j < site.navbar.text_el_c; j++){
-			ADD_A(site.navbar.text_elements[j]., "[", "]")
+		if(file == NULL){
+			fprintf(stderr, "Failed to open file: %s\n", filepath);
+			break;
 		}
+
 		fprintf(
 			file,
-			"\t\t</nav>\n"
-			"\t\t<hr>\n"
+			"<!DOCTYPE html>\n<html>\n\t<head>\n"
+			"\t\t<meta charset=\"UTF-8\">\n"
+			"\t\t<meta name=\"author\" content=\""STR_PRINT"\">\n"
+			"\t\t<meta name=\"description\" content=\""STR_PRINT"\">\n"
+			"\t\t<link rel=\"stylesheet\" href=\"style.css\">\n",
+			STR_FMT(site.pages[0].metadata.author),
+			STR_FMT(site.pages[0].metadata.description)
 		);
-		if(site.pages[i].title.len != 0){
+
+		if(site.pages[i].metadata.title.len != 0){
+			fprintf(file, "\t\t<title>"STR_PRINT"</title>\n", STR_FMT(site.pages[i].metadata.title));
+		}
+		else{
+			fprintf(file, "\t\t<title>"STR_PRINT"</title>\n", STR_FMT(site.pages[0].metadata.title));
+		}
+
+		fprintf(
+			file,
+			"\t</head>\n\t<body>\n"
+			"\t<div class=\"global_box\">\n"
+		);
+		fprintf(
+			file,
+			"\t<div style=\"display: inline;\">\n"
+			"\t\t<p>"STR_PRINT"</p>"
+			"\t\t<nav style=\"text-align:center;\">\n",
+			STR_FMT(site.pages[0].metadata.author)
+		);
+		for(int j = 0; j < site.pages[0].el_len; j++){
+			struct element* el = &site.pages[0].elements[j];
+			if(el->is_text){
+				new_p(el->, "[", "]");
+			}
+		}
+		fprintf(file, "\t\t</nav>\n\t</div>\n\t\t<hr>\n");
+		if(site.pages[i].metadata.name.len != 0){
 			fprintf(
 				file,
-				"\t\t<h2 class=\"page_title\">"STRING_FMT"</h1>\n\t\t<hr>\n",
-				STRING_ARGS(site.pages[i].title)
+				"\t\t<h2 class=\"page_title\">"STR_PRINT"</h2>\n\t\t<hr>\n",
+				STR_FMT(site.pages[i].metadata.name)
 			);
 		}
 
-		for(int j = 0; j < site.pages[i].text_el_c; j++){
-			struct text_element* el = &site.pages[i].text_elements[j];
-			if(el->target.len == 0){
-				if(el->level == 0){
-					fprintf(
-						file,
-						"\t\t<p class=\"text_element_p\">"STRING_FMT"</p>\n",
-						STRING_ARGS(el->text)
-					);
+		for(int j = 0; j < site.pages[i].el_len; j++){
+			struct element* el = &site.pages[i].elements[j];
+
+			if(el->is_text){
+				if(el->as.text.level == 0){
+					new_p(el->, "", "");
 				}
-				else if(el->level == -1){
+				else if(el->as.text.level < 0){
 					fprintf(
 						file,
-						"\t\t<xmp class=\"code\">"STRING_FMT"</xmp>\n",
-						STRING_ARGS(el->text)
+						"\t\t<pre class=\"code\">"STR_PRINT"</pre>\n",
+						STR_FMT(el->as.text.str)
 					);
 				}
 				else{
-					fprintf(
-						file,
-						"\t\t<h%d class=\"text_element_h\">"STRING_FMT"</h%d>\n",
-						el->level+1, STRING_ARGS(el->text), el->level+1
-					);
+					new_h(el->, "", "");
 				}
+				fprintf(file, "\t\t<p></p>\n");
 			}
 			else{
-				ADD_A(el->, "", "");
-				fprintf(file, "\t\t<p></p>\n");
+				fprintf(file, "\t\t<img src=\""STR_PRINT"\" alt=\""STR_PRINT"\">",
+				STR_FMT(el->as.image.src), STR_FMT(el->as.image.alt_text));
 			}
 		}
 
@@ -156,64 +157,19 @@ int main(int argc, char* argv[]){
 		fclose(file);
 	}
 
-	FILE* file = fopen("style.css", "w");
-	fwrite(css_file, sizeof(char), strlen(css_file), file);
-	fclose(file);
-
-	free(site.navbar.text_elements);
-	for(int i = 0; i < page_count; i++){
-		free(site.pages[i].text_elements);
+	// NOTE: not freeing the strings as they point to the already allocated token strings
+	for(int i = 0; i < site.pa_len; i++){
+		free(site.pages[i].elements);
 	}
 	free(site.pages);
 
-end_lexing:
-	free(tokens);
+failed_processing:
+	for(int i = 0; i < tokens.len; i++){
+		free(tokens.arr[i].str);
+	}
+	free(tokens.arr);
 
+failed_tokenize:
+	free(buffer);
 	return 0;
 }
-
-const char* css_file = 
-"body {\n"
-"\tfont-size: 14px;\n"
-"\tbackground-color: #3b4252;\n"
-"\tcolor: #eceff4;\n"
-"\toverflow: scroll;\n"
-"}\n"
-"a {\n"
-"\tcolor: #81a1c1;\n"
-"}\n"
-"a:hover {\n"
-"\tcolor: #434c5e;\n"
-"}\n"
-".page_title {\n"
-"\ttext-align: center;\n"
-"}\n"
-".text_element_p {\n"
-"\tmargin-left: 4%;\n"
-"\twidth: 92%;\n"
-"\toverflow-wrap: break-word;\n"
-"}\n"
-".text_element_h {\n"
-"\ttext-align: center;\n"
-"}\n"
-".text_element_box {\n"
-"\tmargin-left: 9%;\n"
-"\twidth: 82%;\n"
-"\theight: 100%;\n"
-"}\n"
-"hr {\n"
-"\tcolor: rgba(0, 0, 0, 0);\n"
-"\tborder: 2px solid #8fbcbb;\n"
-"\tborder-radius: 50px;\n"
-"\twidth: 92%;\n"
-"}\n"
-".nav_elem {\n"
-"\tcolor: #a3be8c;\n"
-"}\n"
-".code {\n"
-"\tmargin-left: 4%;\n"
-"\twidth: 92%;\n"
-"\tfont-family: monospace;\n"
-"\tcolor: #a3be8c;\n"
-"}\n"
-"\0";

@@ -1,26 +1,26 @@
 % Website Title | Ishaan Mehta | TODO! Description
-~ Cool giant title wheee
 
-home > (index)
-github > {https://github.com/MeanBeanie}
-TODO! add more links > (index)
+"home" > (index)
+"github" > {https://github.com/MeanBeanie}
+"TODO! add more links" > (index)
 
 [index]
-# Header
-this is the main page, it needs to exist
-it has links to other pages too
-go to page 1 > (page1)
-go to page 2 > (page2)
+# "Header"
+"this is the main page, it needs to exist"
+"it has links to other pages too"
+"go to page 1" > (page1)
+"go to page 2" > (page2)
 
 [page1]
-% Project 1: Doing this with that and this
-# Header
-hello world, how are you!
-This is page one, split up across multiple p elements
-- this has a list
-- it is unordered
-- but it is still good
-## Then code stuff
+% Project 1
+~ Project 1: Doing this with that and this
+# "Header"
+"hello world, how are you!"
+"This is page one, split up across multiple p elements"
+"- this has a list"
+"- it is unordered"
+"- but it is still good"
+## "Then code stuff"
 `
 // i'm a code block :3
 // no syntax highlight though
@@ -34,10 +34,12 @@ int main(int argc, char* argv[]){
 	return 0;
 }
 `
+$image.png | a sample image of a giraffe
 
 [page2]
-% Project 2: Doing that with this and that
-# Header
-Neato this is page 2
-## Subheader
-this one even has a subheader
+% Project 2
+~ Project 2: Doing that with this and that
+# "Header"
+"Neato this is page 2"
+## "Subheader"
+"this one even has a subheader"

@@ -1,5 +1,4 @@
-CFLAGS = -std=c11 -Wall -Wextra -ggdb
-TARGET = text2web
+CFLAGS = -Wall -Wextra -std=c11 -ggdb
 
-$(TARGET): main.c lexer.c
-	gcc *.c -o $(TARGET) $(CFLAGS)
+all:
+	gcc *.c -o portgen $(CFLAGS)
