@@ -2,7 +2,6 @@
 #include "tokenizer.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define cur_page res.pages[res.pa_len]
 #define cur_elem cur_page.elements[cur_page.el_len]
@@ -75,7 +74,7 @@ struct website process_tokens(struct token_list* tokens, int page_count){
 			case TT_TEXT:
 			{
 				cur_elem = (struct element){
-					.is_text = 1,
+					.type = 1,
 					.as.text = (struct text_element){
 						.is_page_ref = -1,
 						.level = held_level,
@@ -94,7 +93,7 @@ struct website process_tokens(struct token_list* tokens, int page_count){
 				if(cur_page.el_len <= 0){
 					// if there is no element before the link, create one with the dummy text: ">"
 					cur_elem = (struct element){
-						.is_text = 1,
+						.type = 1,
 						.as.text = (struct text_element){
 							.level = 0,
 							.str = (string){ .str = tokens->arr[i].str, .len = tokens->arr[i].len }
@@ -122,7 +121,7 @@ struct website process_tokens(struct token_list* tokens, int page_count){
 			case TT_CODE:
 			{
 				cur_elem = (struct element){
-					.is_text = 1,
+					.type = 1,
 					.as.text = (struct text_element){
 						.is_page_ref = -1,
 						.level = -1,
@@ -141,7 +140,7 @@ struct website process_tokens(struct token_list* tokens, int page_count){
 				int src_end = get_next(tokens->arr[i].str, tokens->arr[i].len, 1, '|');
 
 				cur_elem = (struct element){
-					.is_text = 0,
+					.type = 0,
 					.as.image = (struct image_element){
 						.src = (string){
 							.str = tokens->arr[i].str+1,
@@ -151,6 +150,19 @@ struct website process_tokens(struct token_list* tokens, int page_count){
 							.str = tokens->arr[i].str+src_end+2,
 							.len = tokens->arr[i].len-src_end-2
 						}
+					}
+				};
+
+				cur_page.el_len++;
+				break;
+			}
+			case TT_HR:
+			{
+				cur_elem = (struct element){
+					.type = 2,
+					.as.hr = (string){
+						.str = tokens->arr[i].str+1,
+						.len = tokens->arr[i].len-1
 					}
 				};
 

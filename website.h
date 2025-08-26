@@ -27,10 +27,11 @@ struct image_element {
 };
 
 struct element {
-	int is_text; // 1 for true
+	int type; // 0 for image, 1 for text, 2 for hr
 	union {
 		struct text_element text;
 		struct image_element image;
+		string hr;
 	} as;
 };
 

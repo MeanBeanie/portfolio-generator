@@ -135,6 +135,23 @@ struct token_list tokenize(char* buffer, int buflen){
 		}
 		if(last_c == '\n'){
 			switch(c){
+				case '-':
+				{
+					int end = next('-');
+					fail_if(end < 0, "Expected closing '-' for <hr>\n");
+
+					cur_elem = (struct token){
+						.type = TT_HR,
+						.len = end-i,
+						.str = malloc(sizeof(char)*(end-i+1))
+					};
+					strncpy(cur_elem.str, buffer+i, cur_elem.len);
+					cur_elem.str[cur_elem.len] = '\0';
+
+					i += cur_elem.len;
+					res.len++;
+					break;
+				}
 				case '.':
 				{
 					int end = next('\n');

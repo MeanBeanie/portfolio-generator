@@ -8,10 +8,11 @@ enum TokenType {
 	TT_CODE,
 	TT_IMAGE = 4,
 	TT_TEXT,
-	TT_HEADER = 6,
-	TT_LINK,
-	TT_PAGE_REF = 8,
-	TT_WEB_REF,
+	TT_HR = 6,
+	TT_HEADER,
+	TT_LINK = 8,
+	TT_PAGE_REF,
+	TT_WEB_REF = 10,
 };
 
 struct token {

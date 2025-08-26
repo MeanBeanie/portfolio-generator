@@ -115,7 +115,7 @@ int main(int argc, char* argv[]){
 		);
 		for(int j = 0; j < site.pages[0].el_len; j++){
 			struct element* el = &site.pages[0].elements[j];
-			if(el->is_text){
+			if(el->type){
 				new_p(el->, "[", "]");
 			}
 		}
@@ -131,25 +131,37 @@ int main(int argc, char* argv[]){
 		for(int j = 0; j < site.pages[i].el_len; j++){
 			struct element* el = &site.pages[i].elements[j];
 
-			if(el->is_text){
-				if(el->as.text.level == 0){
-					new_p(el->, "", "");
+			switch(el->type){
+				case 0: // IMAGE
+				{
+					fprintf(file, "\t\t<img src=\""STR_PRINT"\" alt=\""STR_PRINT"\">",
+					STR_FMT(el->as.image.src), STR_FMT(el->as.image.alt_text));
+					break;
 				}
-				else if(el->as.text.level < 0){
-					fprintf(
-						file,
-						"\t\t<pre class=\"code\">"STR_PRINT"</pre>\n",
-						STR_FMT(el->as.text.str)
-					);
+				case 1: // TEXT
+				{
+					if(el->as.text.level == 0){
+						new_p(el->, "", "");
+					}
+					else if(el->as.text.level < 0){
+						fprintf(
+							file,
+							"\t\t<xmp class=\"code\">"STR_PRINT"</xmp>\n",
+							STR_FMT(el->as.text.str)
+						);
+					}
+					else{
+						new_h(el->, "", "");
+					}
+					fprintf(file, "\t\t<p></p>\n");
+					break;
 				}
-				else{
-					new_h(el->, "", "");
+				case 2: // HR
+				{
+					fprintf(file, "\t\t<hr class=\"hori-"STR_PRINT"\">\n",
+					STR_FMT(el->as.hr));
+					break;
 				}
-				fprintf(file, "\t\t<p></p>\n");
-			}
-			else{
-				fprintf(file, "\t\t<img src=\""STR_PRINT"\" alt=\""STR_PRINT"\">",
-				STR_FMT(el->as.image.src), STR_FMT(el->as.image.alt_text));
 			}
 		}
 
