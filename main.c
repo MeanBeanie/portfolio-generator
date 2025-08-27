@@ -182,6 +182,5 @@ failed_processing:
 	free(tokens.arr);
 
 failed_tokenize:
-	free(buffer);
 	return 0;
 }

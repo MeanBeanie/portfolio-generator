@@ -273,9 +273,13 @@ struct token_list tokenize(char* buffer, int buflen){
 		last_c = buffer[i];
 	}
 
-	return res;
+	goto passed;
+
 failure:
 	free(res.arr);
 	res.arr = NULL;
+
+passed:
+	free(buffer);
 	return res;
 }
