@@ -20,6 +20,7 @@ int get_next(char* buffer, int buflen, int start, char target){
 #define fail_if(cond,msg)\
 	if((cond)){\
 		fprintf(stderr, "\n[line %d] "msg, line);\
+		crashed_i = i > 6 ? i : 6;\
 		goto failure;\
 	}
 
@@ -34,6 +35,7 @@ struct token_list tokenize(char* buffer, int buflen){
 	};
 
 	int line = 1;
+	int crashed_i = 5;
 
 	char last_c = '\n';
 	for(int i = 0; i < buflen; i++){
@@ -276,6 +278,7 @@ struct token_list tokenize(char* buffer, int buflen){
 	goto passed;
 
 failure:
+	printf("Excerpt for crash: \"%.*s\x1b[0;31m%c\x1b[0m%.*s\"\n", 5, buffer+crashed_i-6, buffer[crashed_i], 5, buffer+crashed_i+1);
 	free(res.arr);
 	res.arr = NULL;
 
